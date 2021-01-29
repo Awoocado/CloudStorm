@@ -6,7 +6,7 @@ try {
     EventEmitter = require('events').EventEmitter;
 }
 const BetterWs = require('../structures/BetterWs');
-const OP = require('../Constants').GATEWAY_OP_CODES;
+const { GATEWAY_OP_CODES: OP, INTENTS } = require('../Constants');
 
 /**
  * @typedef DiscordConnector
@@ -196,9 +196,11 @@ class DiscordConnector extends EventEmitter {
                 },
                 large_threshold: this.options.largeGuildThreshold,
                 shard: [this.id, this.options.shardAmount],
-                presence: this.options.initialPresence ? this._checkPresenceData(this.options.initialPresence) : null
+                presence: this.options.initialPresence ? this._checkPresenceData(this.options.initialPresence) : null,
             }
         };
+        let intents = this.options.intents ? this.parseIntents(this.options.intents) : null;
+        if (intents) data.d.intents = intents;
         this.forceIdentify = false;
         return this.betterWs.sendMessage(data);
     }
@@ -211,7 +213,7 @@ class DiscordConnector extends EventEmitter {
     resume() {
         return this.betterWs.sendMessage({
             op: OP.RESUME,
-            d: {seq: this.seq, token: this.options.token, session_id: this.sessionId}
+            d: { seq: this.seq, token: this.options.token, session_id: this.sessionId }
         });
     }
 
@@ -220,7 +222,7 @@ class DiscordConnector extends EventEmitter {
      * @protected
      */
     heartbeat() {
-        this.betterWs.sendMessage({op: OP.HEARTBEAT, d: this.seq});
+        this.betterWs.sendMessage({ op: OP.HEARTBEAT, d: this.seq });
     }
 
     /**
@@ -328,7 +330,7 @@ class DiscordConnector extends EventEmitter {
      * @protected
      */
     statusUpdate(data = {}) {
-        return this.betterWs.sendMessage({op: OP.STATUS_UPDATE, d: this._checkPresenceData(data)});
+        return this.betterWs.sendMessage({ op: OP.STATUS_UPDATE, d: this._checkPresenceData(data) });
     }
 
     /**
@@ -341,7 +343,7 @@ class DiscordConnector extends EventEmitter {
         if (!data) {
             return Promise.resolve();
         }
-        return this.betterWs.sendMessage({op: OP.VOICE_STATE_UPDATE, d: this._checkVoiceStateUpdateData(data)});
+        return this.betterWs.sendMessage({ op: OP.VOICE_STATE_UPDATE, d: this._checkVoiceStateUpdateData(data) });
     }
 
     /**
@@ -351,7 +353,16 @@ class DiscordConnector extends EventEmitter {
      * @protected
      */
     requestGuildMembers(data = {}) {
-        return this.betterWs.sendMessage({op: OP.REQUEST_GUILD_MEMBERS, d: this._checkRequestGuildMembersData(data)});
+        return this.betterWs.sendMessage({ op: OP.REQUEST_GUILD_MEMBERS, d: this._checkRequestGuildMembersData(data) });
+    }
+
+    parseIntents(bit = 0) {
+        if (typeof bit === 'number' && bit >= 0) return bit;
+        if (Array.isArray(bit)) return bit.map(p => this.parseIntents(p)).reduce((prev, p) => prev | p, 0);
+        if (typeof bit === 'string' && typeof INTENTS[bit] !== 'undefined') return INTENTS[bit];
+        const error = new RangeError('BITFIELD_INVALID');
+        error.bit = bit;
+        throw error;
     }
 
     /**

@@ -9,7 +9,7 @@ try {
 let Erlpack;
 try {
     Erlpack = require('erlpack');
-// eslint-disable-next-line no-empty
+    // eslint-disable-next-line no-empty
 } catch (e) {
 
 }
@@ -26,7 +26,7 @@ class Client extends EventEmitter {
      * Create a new Client to connect to the gateway
      * @param {String} token - token received from creating a discord bot user, which will be used to connect to the gateway
      * @param {Object} [options]
-     * @param {Number} [options.largeGuildThreshold=250] - Value between 50 and 250 at which the discord gateway stops sending offline guild members
+     * @param {Number} [options.largeGuildThreshold=50] - Value between 50 and 250 at which the discord gateway stops sending offline guild members
      * @param {Number} [options.firstShardId=0] - Id of the first shard that should be started
      * @param {Number} [options.lastShardId=0] - Id of the last shard that should be started, not to be confused with shardAmount, lastShardId tells CloudStorm the range of shardId's to spawn,
      * so you can use this parameter to run multi-process sharding where one CloudStorm instance running multiple shards runs in one process.
@@ -34,6 +34,7 @@ class Client extends EventEmitter {
      * @param {Number} [options.shardAmount=1] - Amount of **total** shards connecting to discord
      * @param {Boolean} [options.reconnect=true] - If the bot should automatically reconnect to discord if it get's disconnected, **leave it set to true unless you know what you are doing**
      * @param {Presence} [options.initialPresence] - If you want to start the bot with an initial presence, you may set it here
+     * @param {Number} [options.intents] - In case you want to receive just the necessary events
      * @property {ShardManager} shardManager - shard manager used for managing a pool of shards (connections) to the discord gateway, discord requires you to shard your bot at 2500 guilds,
      * but you may do it earlier.
      * @property {String} version - version of this package, exposed so you can use it easier.
@@ -46,7 +47,7 @@ class Client extends EventEmitter {
             throw new Error('Missing token!');
         }
         this.options = {
-            largeGuildThreshold: 250,
+            largeGuildThreshold: 50,
             firstShardId: 0,
             lastShardId: 0,
             shardAmount: 1,
